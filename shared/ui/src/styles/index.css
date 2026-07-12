@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@source "../../../../apps/*/src/**/*.{js,ts,jsx,tsx}";
+@source "../components/**/*.{js,ts,jsx,tsx}";
+
+@theme {
+  /* Nigeria Government / OAGF Brand Palette */
+  --color-oagf-green: #1b7a3e;
+  --color-oagf-green-dark: #145a2e;
+  --color-oagf-green-light: #e8f5e9;
+  --color-oagf-gold: #f4a261;
+  --color-oagf-white: #ffffff;
+  --color-oagf-offwhite: #f8f9fa;
+  --color-oagf-text: #212529;
+  --color-oagf-grey: #6c757d;
+  --color-oagf-border: #dee2e6;
+  --color-oagf-danger: #dc3545;
+  --color-oagf-danger-light: #f8d7da;
+  --color-oagf-info: #0d6efd;
+  --color-oagf-info-light: #cfe2ff;
+
+  /* Typography */
+  --font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+:root {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: #212529;
+  background-color: #f8f9fa;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+html,
+body,
+#root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Focus visible ring */
+*:focus-visible {
+  outline: 1px solid #1b7a3e;
+  outline-offset: 1px;
+}
+
+/* Number inputs: always show spinners but keep them subtle */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  opacity: 1;
+}
+
+/* Utility helpers */
+.tabular-figures {
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,29 @@
+{
+  "name": "oagf-pension-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "shared/ui",
+    "apps/main",
+    "apps/admin"
+  ],
+  "scripts": {
+    "dev:main": "npm run dev -w apps/main",
+    "dev:admin": "npm run dev -w apps/admin",
+    "build:main": "npm run build -w apps/main",
+    "build:admin": "npm run build -w apps/admin",
+    "build:demo:main": "npm run build:demo -w apps/main",
+    "build:demo:admin": "npm run build:demo -w apps/admin",
+    "build": "npm run build:main && npm run build:admin",
+    "tauri:main": "npm run tauri:dev -w apps/main",
+    "tauri:admin": "npm run tauri:dev -w apps/admin",
+    "tauri:build:main": "npm run tauri:build -w apps/main",
+    "tauri:build:admin": "npm run tauri:build -w apps/admin",
+    "tauri:build:demo:main": "npm run tauri:build -w apps/main -- --config src-tauri/tauri.demo.conf.json",
+    "tauri:build:demo:admin": "npm run tauri:build -w apps/admin -- --config src-tauri/tauri.demo.conf.json"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.3"
+  }
+}

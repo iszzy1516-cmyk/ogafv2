@@ -1,0 +1,17 @@
+[package]
+name = "oagf-main-app"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "OAGF Pension Severance — Main App for Clerks and Verifiers"
+
+[lib]
+name = "oagf_main_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+oagf-backend = { path = "../../../crates/oagf-backend" }
