@@ -53,5 +53,9 @@ nokhwa = { version = "0.10", features = ["input-native"] }
 image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
 base64 = "0.22"
 
+[features]
+default = []
+demo = []
+
 [lints.rust]
 unsafe_code = "forbid"

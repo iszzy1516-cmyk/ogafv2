@@ -15,3 +15,7 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = [] }
 oagf-backend = { path = "../../../crates/oagf-backend" }
+
+[features]
+default = []
+demo = ["oagf-backend/demo"]

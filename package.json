@@ -20,8 +20,8 @@
     "tauri:admin": "npm run tauri:dev -w apps/admin",
     "tauri:build:main": "npm run tauri:build -w apps/main",
     "tauri:build:admin": "npm run tauri:build -w apps/admin",
-    "tauri:build:demo:main": "npm run tauri:build -w apps/main -- --config src-tauri/tauri.demo.conf.json",
-    "tauri:build:demo:admin": "npm run tauri:build -w apps/admin -- --config src-tauri/tauri.demo.conf.json"
+    "tauri:build:demo:main": "npm run tauri:build -w apps/main -- --config src-tauri/tauri.demo.conf.json --features demo",
+    "tauri:build:demo:admin": "npm run tauri:build -w apps/admin -- --config src-tauri/tauri.demo.conf.json --features demo"
   },
   "devDependencies": {
     "typescript": "~5.8.3"

@@ -8,6 +8,7 @@ pub mod models;
 
 use db::DbState;
 use std::{sync::Arc, time::Duration};
+#[cfg(not(feature = "demo"))]
 use tauri::Manager;
 use tokio::sync::{Mutex, watch};
 
@@ -99,50 +100,59 @@ impl serde::Serialize for Error {
 pub fn setup<R: tauri::Runtime>(builder: tauri::Builder<R>) -> tauri::Builder<R> {
     builder
         .plugin(tauri_plugin_opener::init())
-        .setup(|app| {
-            let handle = app.handle().clone();
-            let backend = Arc::new(BackendState::default());
-            handle.manage(backend.clone());
+        .setup(|_app| {
+            #[cfg(not(feature = "demo"))]
+            {
+                let handle = _app.handle().clone();
+                let backend = Arc::new(BackendState::default());
+                handle.manage(backend.clone());
 
-            tauri::async_runtime::spawn(async move {
-                let base = data_dir();
-                log::info!("OAGF data directory: {}", base.display());
-                match DbState::new(base).await {
-                    Ok(db) => {
-                        // Create a default admin if the database is empty.
-                        match crate::auth::ensure_default_users(db.pool()).await {
-                            Ok(created) if !created.is_empty() => {
-                                for (username, password) in created {
-                                    log::warn!(
-                                        "FIRST-RUN SETUP: default user created. username={} password={}",
-                                        username, password
-                                    );
+                tauri::async_runtime::spawn(async move {
+                    let base = data_dir();
+                    log::info!("OAGF data directory: {}", base.display());
+                    match DbState::new(base).await {
+                        Ok(db) => {
+                            // Create a default admin if the database is empty.
+                            match crate::auth::ensure_default_users(db.pool()).await {
+                                Ok(created) if !created.is_empty() => {
+                                    for (username, password) in created {
+                                        log::warn!(
+                                            "FIRST-RUN SETUP: default user created. username={} password={}",
+                                            username, password
+                                        );
+                                    }
+                                    *backend.db.lock().await = Some(Arc::new(db));
+                                    backend.ready_sender.send_replace(true);
+                                    log::info!("OAGF backend initialized successfully");
                                 }
-                                *backend.db.lock().await = Some(Arc::new(db));
-                                backend.ready_sender.send_replace(true);
-                                log::info!("OAGF backend initialized successfully");
-                            }
-                            Ok(_) => {
-                                *backend.db.lock().await = Some(Arc::new(db));
-                                backend.ready_sender.send_replace(true);
-                                log::info!("OAGF backend initialized successfully");
-                            }
-                            Err(e) => {
-                                let msg = format!("Failed to create default users: {e}");
-                                log::error!("{msg}");
-                                *backend.init_error.lock().await = Some(msg);
-                                backend.ready_sender.send_replace(true);
+                                Ok(_) => {
+                                    *backend.db.lock().await = Some(Arc::new(db));
+                                    backend.ready_sender.send_replace(true);
+                                    log::info!("OAGF backend initialized successfully");
+                                }
+                                Err(e) => {
+                                    let msg = format!("Failed to create default users: {e}");
+                                    log::error!("{msg}");
+                                    *backend.init_error.lock().await = Some(msg);
+                                    backend.ready_sender.send_replace(true);
+                                }
                             }
                         }
+                        Err(e) => {
+                            let msg = format!("Failed to initialize OAGF backend: {e}");
+                            log::error!("{msg}");
+                            *backend.init_error.lock().await = Some(msg);
+                            backend.ready_sender.send_replace(true);
+                        }
                     }
-                    Err(e) => {
-                        let msg = format!("Failed to initialize OAGF backend: {e}");
-                        log::error!("{msg}");
-                        *backend.init_error.lock().await = Some(msg);
-                        backend.ready_sender.send_replace(true);
-                    }
-                }
-            });
+                });
+            }
+
+            #[cfg(feature = "demo")]
+            {
+                log::info!("OAGF demo mode: backend initialization skipped");
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
