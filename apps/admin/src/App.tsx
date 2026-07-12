@@ -36,22 +36,21 @@ function RequirePasswordChange({ children }: { children: React.ReactNode }) {
 
 function App() {
   const [backendReady, setBackendReady] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    let timeoutId: ReturnType<typeof setTimeout>;
 
     async function checkBackend() {
+      setStartError(null);
       try {
         await api.waitForBackend();
         if (!cancelled) setBackendReady(true);
       } catch (err) {
-        console.error("Backend not ready, retrying...", err);
         if (!cancelled) {
-          timeoutId = setTimeout(() => {
-            setAttempt((n) => n + 1);
-          }, 2000);
+          const message = err instanceof Error ? err.message : String(err);
+          setStartError(message);
         }
       }
     }
@@ -59,12 +58,16 @@ function App() {
     checkBackend();
     return () => {
       cancelled = true;
-      clearTimeout(timeoutId);
     };
   }, [attempt]);
 
   if (!backendReady) {
-    return <LoadingScreen />;
+    return (
+      <LoadingScreen
+        error={startError}
+        onRetry={startError ? () => setAttempt((n) => n + 1) : undefined}
+      />
+    );
   }
 
   return (
