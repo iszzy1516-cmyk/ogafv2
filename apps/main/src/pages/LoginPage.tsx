@@ -19,7 +19,7 @@ export function LoginPage() {
     if (success) {
       const user = useAuthStore.getState().user;
       if (user?.role === "admin") {
-        setPortalError("Invalid username or password.");
+        setPortalError("Admin users must log in via the Admin application.");
         return;
       }
       if (user?.must_change_password) {
