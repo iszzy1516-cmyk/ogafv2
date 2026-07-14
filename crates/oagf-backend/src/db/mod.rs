@@ -1,3 +1,4 @@
+mod embedded;
 pub mod pool;
 
 use std::path::PathBuf;

@@ -24,6 +24,10 @@ tokio = { version = "1", features = ["full"] }
 # PostgreSQL database
 sqlx = { version = "0.8", features = ["runtime-tokio", "postgres", "uuid", "chrono", "json", "migrate", "rust_decimal"] }
 
+# Bundled/self-managed local PostgreSQL (no manual install required by end users)
+postgresql_embedded = { version = "0.20", features = ["bundled", "tokio"] }
+fd-lock = "4"
+
 # Auth
 argon2 = "0.5"
 password-hash = "0.5"

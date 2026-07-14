@@ -38,7 +38,7 @@
 
 The **OAGF SEVERANCE Application** is a desktop system designed for the Office of the Accountant General of the Federation to capture, verify, and manage pensioner severance records locally without any external server or cloud dependency.
 
-The application runs entirely on a local Windows machine (targeted for Windows 10/11). It uses a local **PostgreSQL** database for structured storage and the local filesystem for beneficiary photos and exports.
+The application runs entirely on a local Windows machine (targeted for Windows 10/11). It uses a local **PostgreSQL** database for structured storage and the local filesystem for beneficiary photos and exports. The shipped app bundles and manages its own PostgreSQL instance automatically — end users do not need to install PostgreSQL separately.
 
 ### Key Objectives
 
@@ -355,7 +355,7 @@ Before you begin, ensure you have the following installed on your development ma
 
 1. **Node.js** (v20 or later) + **npm** v10 or later
 2. **Rust** toolchain (stable) — install via [rustup.rs](https://rustup.rs/)
-3. **PostgreSQL** 14+ (local instance)
+3. **PostgreSQL** 14+ — *optional*. The app bundles and auto-starts its own local instance when the `DATABASE_URL` environment variable is unset (this is also true in dev). Install PostgreSQL yourself only if you want to point the app at a specific/existing database (e.g. for the automated test suite, which always sets `DATABASE_URL` explicitly).
 4. **Tauri v2 CLI** prerequisites:
    - Linux: `libwebkit2gtk-4.1-dev`, `build-essential`, `curl`, `wget`, `file`, `libssl-dev`, `libgtk-3-dev`, `libappindicator3-dev`, `librsvg2-dev`
    - Windows: WebView2 runtime (included on Windows 10/11), Microsoft Visual Studio C++ Build Tools
@@ -368,19 +368,19 @@ node --version      # Should print v20.x or later
 npm --version       # Should print v10.x or later
 rustc --version     # Should print stable Rust version
 cargo --version     # Should print cargo version
-psql --version      # Should print PostgreSQL version
 ```
 
 ### Database Setup
 
-Create the application database:
+No manual setup is required — the backend starts its own local PostgreSQL instance and runs migrations automatically on first launch.
+
+If you'd rather point the app at a PostgreSQL instance you manage yourself (matching the pre-bundling behavior), set `DATABASE_URL` before launching:
 
 ```bash
 sudo -u postgres psql -c "CREATE DATABASE oagf_pension;"
 sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+export DATABASE_URL=postgres://postgres:postgres@localhost:5432/oagf_pension
 ```
-
-The backend will automatically run migrations on first launch.
 
 ---
 
@@ -601,9 +601,8 @@ The release will appear at `https://github.com/iszzy1516-cmyk/OGAF/releases`.
 3. The installer will create:
    - Application shortcuts
    - Local data directories under `%LOCALAPPDATA%\OAGF_Pension\`
-4. Ensure PostgreSQL is installed and running locally.
-5. Create the `oagf_pension` database (the app will run migrations automatically).
-6. Launch the app and sign in.
+4. Launch the app. On first launch it automatically initializes and starts its bundled PostgreSQL instance and runs migrations — no separate PostgreSQL install is required. This can take up to a minute the first time.
+5. Sign in.
 
 ### Production Default Credentials
 
@@ -724,7 +723,7 @@ The system supports three user roles:
 
 ## Database
 
-The application uses **PostgreSQL** as the local database. All schema migrations are applied automatically on first launch.
+The application uses **PostgreSQL** as the local database. The app bundles and auto-starts its own instance (see [Connection](#connection) below), and all schema migrations are applied automatically on first launch.
 
 ### Core Tables
 
@@ -744,11 +743,13 @@ The backend computes the following derived financial fields:
 
 ### Connection
 
-The backend reads the `DATABASE_URL` environment variable and falls back to:
+The backend reads the `DATABASE_URL` environment variable. If it's unset, the app bundles and auto-starts its own local PostgreSQL instance (data stored under `%LOCALAPPDATA%\OAGF_Pension\pgdata`) and connects to it at:
 
 ```text
 postgres://postgres:postgres@localhost:5432/oagf_pension
 ```
+
+Both the main and admin apps share this same local instance and coordinate startup via a file lock, so either can be launched first. Set `DATABASE_URL` explicitly to instead point the app at a PostgreSQL instance you manage yourself (used by the automated test suite, and available for IT-managed deployments).
 
 ### Migrations
 
@@ -905,7 +906,9 @@ Or use `npx tauri` instead.
 
 ### Database Connection Failed
 
-Ensure PostgreSQL is running and the database exists:
+By default the app manages its own local PostgreSQL instance, so this usually resolves itself with a retry (first launch can take up to a minute while it initializes). If the error persists, check the app logs for the underlying error — common causes are port `5432` already being used by an unrelated process, or antivirus software blocking the bundled `postgres.exe`/`initdb.exe` binaries under `%LOCALAPPDATA%\OAGF_Pension\pgsql`.
+
+If you've set `DATABASE_URL` to point at a PostgreSQL instance you manage yourself, ensure it's running and the database exists:
 
 ```bash
 PGPASSWORD=postgres psql -h localhost -U postgres -c "SELECT 1 FROM pg_database WHERE datname = 'oagf_pension';"

@@ -26,8 +26,17 @@ impl DbState {
             }
         }
 
-        let database_url = std::env::var("DATABASE_URL")
-            .unwrap_or_else(|_| "postgres://postgres:postgres@localhost:5432/oagf_pension".to_string());
+        let operator_configured = std::env::var("DATABASE_URL").ok();
+        let database_url = operator_configured
+            .clone()
+            .unwrap_or_else(|| "postgres://postgres:postgres@localhost:5432/oagf_pension".to_string());
+
+        // When the operator hasn't pointed us at a specific database, we manage
+        // our own bundled local PostgreSQL instance so end users never need to
+        // install one themselves.
+        if operator_configured.is_none() {
+            crate::db::embedded::ensure_local_postgres(&base_dir).await?;
+        }
 
         let options: PgConnectOptions = database_url
             .parse()
@@ -40,10 +49,16 @@ impl DbState {
             .acquire_timeout(std::time::Duration::from_secs(10))
             .connect_with(options)
             .await
-            .map_err(|e| crate::Error::Database(format!(
-                "Failed to connect to PostgreSQL at localhost:5432. \
-                Please ensure PostgreSQL 14+ is installed and running. Error: {e}"
-            )))?;
+            .map_err(|e| {
+                if operator_configured.is_some() {
+                    crate::Error::Database(format!(
+                        "Failed to connect to the configured PostgreSQL database. \
+                        Please ensure it is reachable. Error: {e}"
+                    ))
+                } else {
+                    crate::Error::Database(format!("Failed to start the local database: {e}"))
+                }
+            })?;
 
         sqlx::migrate!("./migrations")
             .run(&pool)

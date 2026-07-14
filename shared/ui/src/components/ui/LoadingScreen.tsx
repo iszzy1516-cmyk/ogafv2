@@ -30,7 +30,10 @@ export function LoadingScreen({
             </div>
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-left text-xs text-amber-800">
               <p className="font-semibold mb-1">Common Fix:</p>
-              <p>Ensure PostgreSQL 14+ is installed and running on this machine, then click Retry.</p>
+              <p>
+                The app manages its own local database and starts it automatically — this can take up to a
+                minute on first launch. Click Retry, or restart the app if the problem persists.
+              </p>
             </div>
             {onRetry && (
               <button
