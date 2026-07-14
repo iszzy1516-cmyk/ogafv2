@@ -22,14 +22,19 @@ fn session_duration() -> Duration {
 /// Returns `Error::Unauthorized` when locked so the caller surface stays generic.
 pub async fn check_login_lockout(pool: &PgPool, username: &str) -> Result<(), Error> {
     let now = Utc::now();
-    let locked: Option<bool> = sqlx::query_scalar(
+    // `locked_until` is nullable, so `locked_until > $1` evaluates to SQL NULL
+    // (not false) once a username has a login_attempts row with no lockout set.
+    // Decode as Option<bool> and flatten so that NULL is treated as "not locked"
+    // instead of failing to decode into a non-Option bool.
+    let locked: Option<bool> = sqlx::query_scalar::<_, Option<bool>>(
         "SELECT locked_until > $1 FROM login_attempts WHERE username = $2"
     )
     .bind(now)
     .bind(username)
     .fetch_optional(pool)
     .await
-    .map_err(|e| Error::Database(e.to_string()))?;
+    .map_err(|e| Error::Database(e.to_string()))?
+    .flatten();
 
     if locked.unwrap_or(false) {
         return Err(Error::Unauthorized);
