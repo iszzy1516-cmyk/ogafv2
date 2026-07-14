@@ -239,8 +239,9 @@ mod tests {
 
     #[tokio::test]
     async fn ready_returns_error_when_backend_never_becomes_ready() {
-        let backend = BackendState::default();
-        let result = tokio::time::timeout(std::time::Duration::from_millis(100), backend.ready()).await;
+        let mut backend = BackendState::default();
+        backend.ready_timeout = std::time::Duration::from_millis(50);
+        let result = tokio::time::timeout(std::time::Duration::from_millis(200), backend.ready()).await;
 
         assert!(result.is_ok(), "backend readiness should fail fast");
         assert!(matches!(result.unwrap(), Err(crate::Error::Internal(_))));

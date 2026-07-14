@@ -35,29 +35,34 @@ export function PrintView({ records, title, singleRecord }: PrintViewProps) {
           .signature-block {
             break-inside: avoid;
           }
+          .page-break-before {
+            break-before: page;
+          }
         }
       `}</style>
 
-      <header className="mb-4 border-b-2 border-black pb-3 text-center">
+      <header className="mb-2 border-b-2 border-black pb-2 text-center">
         <img
           src={coatOfArms}
           alt="Coat of Arms of Nigeria"
-          className="mx-auto mb-2 h-16 w-auto"
+          className="mx-auto mb-1 h-14 w-auto"
         />
-        <h1 className="text-xl font-bold uppercase tracking-wide">OAGF SEVERANCE</h1>
-        <p className="text-sm font-semibold">{title}</p>
-        <p className="text-xs text-gray-600">Printed on {printDate}</p>
+        <h1 className="text-lg font-bold uppercase tracking-wide">OAGF SEVERANCE</h1>
+        <p className="text-xs font-semibold">{title}</p>
+        <p className="text-[10px] text-gray-600">Printed on {printDate}</p>
       </header>
 
       {singleRecord && records.length === 1 ? (
         <SingleRecordView record={records[0]} />
+      ) : records.length === 1 ? (
+        <SingleRecordView record={records[0]} />
       ) : (
-        <RecordsTable records={records} />
+        <RecordsDetailView records={records} />
       )}
 
-      <footer className="mt-6 border-t border-gray-300 pt-4">
-        <p className="mb-3 text-xs font-semibold uppercase">Authorization Signatures</p>
-        <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+      <footer className="mt-4 border-t border-gray-300 pt-2">
+        <p className="mb-2 text-xs font-semibold uppercase">Authorization Signatures</p>
+        <div className="grid grid-cols-2 gap-x-8 gap-y-3">
           <SignatureLine label="1. Beneficiary" />
           <SignatureLine label="2. MDA Representative" />
           <SignatureLine label="3. OAGF Representative" />
@@ -71,11 +76,11 @@ export function PrintView({ records, title, singleRecord }: PrintViewProps) {
 function SignatureLine({ label }: { label: string }) {
   return (
     <div className="signature-block">
-      <p className="mb-6 text-xs font-medium">{label}</p>
+      <p className="mb-4 text-xs font-medium">{label}</p>
       <div className="border-b border-black pb-1">
         <span className="text-xs text-gray-500">Signature</span>
       </div>
-      <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+      <div className="mt-1 grid grid-cols-2 gap-2 text-xs">
         <div className="border-b border-gray-400 pb-1">
           <span className="text-gray-500">Full Name</span>
         </div>
@@ -89,118 +94,126 @@ function SignatureLine({ label }: { label: string }) {
 
 function SingleRecordView({ record }: { record: Pensioner }) {
   return (
-    <div className="space-y-4">
-      <section className="print-row grid grid-cols-2 gap-4 text-sm">
-        <div>
-          <p className="text-xs text-gray-500">Employee Name</p>
-          <p className="font-semibold">{record.full_name}</p>
-        </div>
-        <div>
-          <p className="text-xs text-gray-500">MDA</p>
-          <p className="font-semibold">{record.mda_name || "—"}</p>
-        </div>
-        <div>
-          <p className="text-xs text-gray-500">Location / Zone</p>
-          <p>{record.location || "—"} / {record.zone || "—"}</p>
-        </div>
-        <div>
-          <p className="text-xs text-gray-500">Date of Birth</p>
-          <p>{formatDate(record.date_of_birth)}</p>
-        </div>
-      </section>
-
-      <section className="print-row">
-        <p className="mb-2 text-xs font-semibold uppercase">Financial Summary</p>
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          <FinancialItem label="Gratuity" value={record.gratuity} />
-          <FinancialItem label="10% Gratuity" value={record.ten_percent_gratuity} />
-          <FinancialItem label="Pension" value={record.pension} />
-          <FinancialItem label="10% Pension" value={record.ten_percent_pension} />
-          <FinancialItem label="Repatriation" value={record.repatriation} />
-          <FinancialItem label="Employee Contribution" value={record.total_employee_contribution_due} />
-          <FinancialItem label="Amount Owed" value={record.amount_owed} />
-          <FinancialItem label="Amount Paid by OAGF" value={record.amount_paid_by_oagf} />
-        </div>
-        <div className="mt-2 border-t-2 border-black pt-2">
-          <div className="flex justify-between text-base font-bold">
-            <span>Due for Payment by OAGF</span>
-            <span>{formatNaira(record.due_for_payment_by_oagf)}</span>
+    <div className="space-y-2 text-xs">
+      <Section title="Personal Information">
+        <div className="col-span-2 grid grid-cols-[1fr_auto] gap-4">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+            <Field label="Record ID" value={record.id} />
+            <Field label="Full Name" value={record.full_name} />
+            <Field label="Gender" value={record.gender || "—"} />
+            <Field label="Date of Birth" value={formatDate(record.date_of_birth)} />
+            <Field label="Location" value={record.location || "—"} />
+            <Field label="Zone" value={record.zone || "—"} />
           </div>
+          {record.photo_path ? (
+            <img
+              src={record.photo_path}
+              alt="Passport"
+              className="h-24 w-24 rounded-md border border-gray-300 object-cover"
+            />
+          ) : (
+            <div className="flex h-24 w-24 items-center justify-center rounded-md border border-gray-300 bg-gray-100 text-[10px] text-gray-500">
+              No Photo
+            </div>
+          )}
         </div>
-      </section>
+      </Section>
 
-      <section className="print-row grid grid-cols-2 gap-4 text-sm">
-        <div>
-          <p className="text-xs text-gray-500">Bank Name</p>
-          <p>{record.bank_name || "—"}</p>
-        </div>
-        <div>
-          <p className="text-xs text-gray-500">Account Number</p>
-          <p>{record.account_number || "—"}</p>
-        </div>
-        <div className="col-span-2">
-          <p className="text-xs text-gray-500">Bank Address</p>
-          <p>{record.bank_address || "—"}</p>
-        </div>
-      </section>
+      <Section title="Employment &amp; Service Records">
+        <Field label="MDA Name" value={record.mda_name || "—"} />
+        <Field label="Salary Structure" value={record.salary_structure || "—"} />
+        <Field label="Grade" value={record.grade || "—"} />
+        <Field label="Step" value={record.step || "—"} />
+        <Field label="1st Appointment Date" value={formatDate(record.first_appointment_date)} />
+        <Field label="Last Promotion Date" value={formatDate(record.last_promotion_date)} />
+        <Field label="Retirement Date" value={formatDate(record.retirement_date)} />
+        <Field label="Years of Service" value={record.years_of_service ?? "—"} />
+        <Field label="Months of Service" value={record.months_of_service ?? "—"} />
+      </Section>
 
-      <section className="print-row text-sm">
-        <p className="text-xs text-gray-500">Status</p>
-        <p className="font-semibold">{record.status}</p>
+      <Section title="Financial &amp; Payment Information">
+        <FinancialField label="APA" value={record.apa} />
+        <FinancialField label="Gratuity" value={record.gratuity} />
+        <FinancialField label="Pension" value={record.pension} />
+        <FinancialField label="Repatriation" value={record.repatriation} />
+        <FinancialField label="Total Employee Contribution Due" value={record.total_employee_contribution_due} />
+        <FinancialField label="Amount Owed" value={record.amount_owed} />
+        <FinancialField label="Amount Owed to MDA" value={record.amount_owed_to_mda} />
+        <FinancialField label="Amount Paid by OAGF" value={record.amount_paid_by_oagf} />
+        <FinancialField label="10% Gratuity" value={record.ten_percent_gratuity} />
+        <FinancialField label="10% Pension" value={record.ten_percent_pension} />
+        <div className="col-span-2 mt-1 flex justify-between border-t-2 border-black pt-1 text-sm font-bold">
+          <span>Due for Payment by OAGF</span>
+          <span>{formatNaira(record.due_for_payment_by_oagf)}</span>
+        </div>
+      </Section>
+
+      <Section title="Banking Information">
+        <Field label="Bank Name" value={record.bank_name || "—"} />
+        <Field label="Account Number" value={record.account_number || "—"} />
+        <Field label="Bank Address" value={record.bank_address || "—"} />
+      </Section>
+
+      <Section title="Next of Kin &amp; Verification">
+        <Field label="NOK Name" value={record.nok_name || "—"} />
+        <Field label="NOK Phone" value={record.nok_phone || "—"} />
+        <Field label="NOK Relation" value={record.nok_relation || "—"} />
+        <Field label="Payment should go to NOK" value={record.nok_payment ? "Yes" : "No"} />
+        <Field label="Status" value={record.status} />
+        <Field label="Verified At" value={formatDate(record.verified_at)} />
+        <Field label="Verified By" value={record.verified_by || "—"} />
+        <Field label="Record Created" value={formatDate(record.created_at)} />
+        <Field label="Last Updated" value={formatDate(record.updated_at)} />
         {record.verification_notes && (
-          <p className="mt-1 text-xs">Notes: {record.verification_notes}</p>
+          <Field label="Verification Notes" value={record.verification_notes} />
         )}
-      </section>
+      </Section>
     </div>
   );
 }
 
-function FinancialItem({ label, value }: { label: string; value: number }) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="flex justify-between">
+    <section className="print-row">
+      <p className="mb-1 border-b border-gray-300 text-[10px] font-semibold uppercase tracking-wide">{title}</p>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1">{children}</div>
+    </section>
+  );
+}
+
+function Field({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex justify-between gap-2">
       <span className="text-gray-600">{label}</span>
-      <span className="font-medium">{formatNaira(value)}</span>
+      <span className="font-medium text-right">{value}</span>
     </div>
   );
 }
 
-function RecordsTable({ records }: { records: Pensioner[] }) {
+function FinancialField({ label, value }: { label: string; value: number }) {
+  return <Field label={label} value={formatNaira(value)} />;
+}
+
+function RecordsDetailView({ records }: { records: Pensioner[] }) {
   return (
-    <table className="w-full border-collapse text-xs">
-      <thead>
-        <tr className="border-b-2 border-black text-left">
-          <th className="py-1 pr-2">#</th>
-          <th className="py-1 pr-2">Name</th>
-          <th className="py-1 pr-2">MDA</th>
-          <th className="py-1 pr-2 text-right">Gratuity</th>
-          <th className="py-1 pr-2 text-right">10% Grat.</th>
-          <th className="py-1 pr-2 text-right">Pension</th>
-          <th className="py-1 pr-2 text-right">10% Pens.</th>
-          <th className="py-1 pr-2 text-right">Repat.</th>
-          <th className="py-1 pr-2 text-right">Contr.</th>
-          <th className="py-1 pr-2 text-right">Owed</th>
-          <th className="py-1 pr-2 text-right">Paid</th>
-          <th className="py-1 text-right">Due</th>
-        </tr>
-      </thead>
-      <tbody>
-        {records.map((record, idx) => (
-          <tr key={record.id} className="print-row border-b border-gray-300">
-            <td className="py-1 pr-2">{idx + 1}</td>
-            <td className="py-1 pr-2 font-medium">{record.full_name}</td>
-            <td className="py-1 pr-2">{record.mda_name || "—"}</td>
-            <td className="py-1 pr-2 text-right">{formatNaira(record.gratuity)}</td>
-            <td className="py-1 pr-2 text-right">{formatNaira(record.ten_percent_gratuity)}</td>
-            <td className="py-1 pr-2 text-right">{formatNaira(record.pension)}</td>
-            <td className="py-1 pr-2 text-right">{formatNaira(record.ten_percent_pension)}</td>
-            <td className="py-1 pr-2 text-right">{formatNaira(record.repatriation)}</td>
-            <td className="py-1 pr-2 text-right">{formatNaira(record.total_employee_contribution_due)}</td>
-            <td className="py-1 pr-2 text-right">{formatNaira(record.amount_owed)}</td>
-            <td className="py-1 pr-2 text-right">{formatNaira(record.amount_paid_by_oagf)}</td>
-            <td className="py-1 text-right font-semibold">{formatNaira(record.due_for_payment_by_oagf)}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className="space-y-0">
+      {records.map((record, idx) => (
+        <div
+          key={record.id}
+          className={idx > 0 ? "page-break-before" : ""}
+        >
+          {idx > 0 && (
+            <header className="mb-2 border-b-2 border-black pb-2 text-center print:block hidden">
+              <h1 className="text-lg font-bold uppercase tracking-wide">OAGF SEVERANCE</h1>
+              <p className="text-xs font-semibold">Detailed Record Print</p>
+            </header>
+          )}
+          <SingleRecordView record={record} />
+          {idx < records.length - 1 && (
+            <div className="border-b-2 border-dashed border-gray-300 my-2 print:block hidden" />
+          )}
+        </div>
+      ))}
+    </div>
   );
 }
