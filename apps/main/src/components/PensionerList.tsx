@@ -129,13 +129,13 @@ export function PensionerList({ status, title }: PensionerListProps) {
     }
     setPrintRecords(data);
     setPrintSingle(false);
-    setTimeout(() => window.print(), 100);
+    setTimeout(() => window.print(), 500);
   }
 
   function handlePrintRecord(record: Pensioner) {
     setPrintRecords([record]);
     setPrintSingle(true);
-    setTimeout(() => window.print(), 100);
+    setTimeout(() => window.print(), 500);
   }
 
   const moneyCell = (value: number) => <span className="tabular-figures">{formatNaira(value)}</span>;

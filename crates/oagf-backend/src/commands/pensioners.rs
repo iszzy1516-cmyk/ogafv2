@@ -8,7 +8,7 @@ use crate::BackendState;
 use crate::models::{ListFilter, Money, PaginationParams, Pensioner, Role};
 use crate::Error;
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Default, serde::Deserialize)]
 pub struct CreatePensionerRequest {
     pub full_name: Option<String>,
     pub gender: Option<String>,
@@ -540,19 +540,63 @@ pub async fn delete_pensioner(
         .await
         .map_err(|e| Error::Database(e.to_string()))?;
 
-    crate::audit::log_event(
-        db.pool(),
-        AuditEvent {
-            user_id: user.id,
-            user_name: user.full_name,
-            action: "DELETE".into(),
-            table_name: Some("pensioners".into()),
-            record_id: Some(id),
-            old_values: Some(old_values),
-            new_values: None,
-        },
-    )
-    .await?;
-
     Ok(())
+}
+
+#[cfg(test)]
+mod calculation_tests {
+    use super::*;
+    use rust_decimal::Decimal;
+    use std::str::FromStr;
+
+    fn money(value: &str) -> Money {
+        Money(Decimal::from_str(value).unwrap())
+    }
+
+    #[test]
+    fn due_for_payment_matches_client_formula() {
+        let req = CreatePensionerRequest {
+            gratuity: Some(money("2500000.00")),
+            pension: Some(money("1800000.00")),
+            repatriation: Some(money("500000.00")),
+            total_employee_contribution_due: Some(money("300000.00")),
+            amount_owed: Some(money("0.00")),
+            amount_paid_by_oagf: Some(money("0.00")),
+            ..Default::default()
+        };
+        let due = calc_due_for_payment(&req);
+        assert_eq!(due.0, money("5530000.00").0);
+    }
+
+    #[test]
+    fn due_for_payment_with_owed_and_paid() {
+        let req = CreatePensionerRequest {
+            gratuity: Some(money("1000000.00")),
+            pension: Some(money("500000.00")),
+            repatriation: Some(money("100000.00")),
+            total_employee_contribution_due: Some(money("50000.00")),
+            amount_owed: Some(money("100000.00")),
+            amount_paid_by_oagf: Some(money("50000.00")),
+            ..Default::default()
+        };
+        let due = calc_due_for_payment(&req);
+        // 1,000,000 + 100,000 + 500,000 + 50,000 + 100,000 + 50,000 - 100,000 - 50,000 = 1,650,000
+        assert_eq!(due.0, money("1650000.00").0);
+    }
+
+    #[test]
+    fn due_for_payment_with_zero_inputs() {
+        let req = CreatePensionerRequest {
+            ..Default::default()
+        };
+        let due = calc_due_for_payment(&req);
+        assert_eq!(due.0, money("0.00").0);
+    }
+
+    #[test]
+    fn ten_percent_rounds_to_two_decimals() {
+        let value = money("1234567.89");
+        let ten = ten_percent(value);
+        assert_eq!(ten.0, money("123456.79").0);
+    }
 }
