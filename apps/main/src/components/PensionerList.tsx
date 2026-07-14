@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search } from "lucide-react";
+import { FileSpreadsheet, FileText, Printer, Search } from "lucide-react";
 import {
   api,
   Badge,
@@ -10,6 +10,7 @@ import {
   formatNaira,
   Input,
   Modal,
+  PrintView,
   useAuthStore,
   useUIStore,
 } from "@oagf/ui";
@@ -33,9 +34,13 @@ export function PensionerList({ status, title }: PensionerListProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [verifyId, setVerifyId] = useState<string | null>(null);
   const [verifyNotes, setVerifyNotes] = useState("");
+  const [exporting, setExporting] = useState<false | "csv" | "excel">(false);
+  const [printRecords, setPrintRecords] = useState<Pensioner[] | null>(null);
+  const [printSingle, setPrintSingle] = useState(false);
 
   const isAdmin = user?.role === "admin";
   const canVerify = user?.role === "verifier" || isAdmin;
+  const canExport = user?.role === "admin" || user?.role === "verifier" || user?.role === "clerk";
 
   async function load() {
     if (!token) return;
@@ -92,6 +97,47 @@ export function PensionerList({ status, title }: PensionerListProps) {
     }
   }
 
+  async function handleExport(type: "csv" | "excel") {
+    if (!token) return;
+    setExporting(type);
+    try {
+      const scope = status.toLowerCase() as "verified" | "unverified" | "rejected";
+      const result =
+        type === "csv"
+          ? await api.exportCsv(token, { scope }, "")
+          : await api.exportExcel(token, { scope }, "");
+      addToast({
+        type: "success",
+        title: "Export Ready",
+        message: `${result.filename} with ${result.record_count} records saved.`,
+      });
+    } catch (err) {
+      addToast({
+        type: "error",
+        title: "Export Failed",
+        message: err instanceof Error ? err.message : "Could not export records",
+      });
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  function handlePrintPage() {
+    if (data.length === 0) {
+      addToast({ type: "warning", title: "Nothing to print", message: "There are no records on this page." });
+      return;
+    }
+    setPrintRecords(data);
+    setPrintSingle(false);
+    setTimeout(() => window.print(), 100);
+  }
+
+  function handlePrintRecord(record: Pensioner) {
+    setPrintRecords([record]);
+    setPrintSingle(true);
+    setTimeout(() => window.print(), 100);
+  }
+
   const moneyCell = (value: number) => <span className="tabular-figures">{formatNaira(value)}</span>;
 
   const columns: Column<Pensioner>[] = [
@@ -134,6 +180,14 @@ export function PensionerList({ status, title }: PensionerListProps) {
           >
             Edit
           </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="px-2 py-1 text-xs"
+            onClick={() => handlePrintRecord(row)}
+          >
+            Print
+          </Button>
           {status === "Unverified" && (isAdmin || row.created_by === user?.id) && (
             <Button
               size="sm"
@@ -150,59 +204,97 @@ export function PensionerList({ status, title }: PensionerListProps) {
   ];
 
   return (
-    <div className="mx-auto max-w-[1280px]">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-          <p className="mt-1 text-sm text-oagf-grey">Manage pensioner records and verification status</p>
-        </div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-oagf-grey" size={18} />
-            <Input
-              placeholder="Search by name..."
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              className="pl-10 sm:w-64"
-            />
+    <>
+      <div className="print:hidden">
+        <div className="mx-auto max-w-[1280px]">
+          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+              <p className="mt-1 text-sm text-oagf-grey">Manage pensioner records and verification status</p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              {canExport && (
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleExport("csv")}
+                    isLoading={exporting === "csv"}
+                    disabled={!!exporting}
+                  >
+                    <FileText size={16} className="mr-1.5" />
+                    Export CSV
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleExport("excel")}
+                    isLoading={exporting === "excel"}
+                    disabled={!!exporting}
+                  >
+                    <FileSpreadsheet size={16} className="mr-1.5" />
+                    Export Excel
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={handlePrintPage}>
+                    <Printer size={16} className="mr-1.5" />
+                    Print
+                  </Button>
+                </>
+              )}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-oagf-grey" size={18} />
+                <Input
+                  placeholder="Search by name..."
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                  className="pl-10 sm:w-64"
+                />
+              </div>
+            </div>
           </div>
+
+          <DataTable
+            columns={columns}
+            data={data}
+            keyExtractor={(row) => row.id}
+            page={page}
+            perPage={perPage}
+            total={total}
+            onPageChange={setPage}
+            onPerPageChange={(size) => { setPerPage(size); setPage(1); }}
+          />
+
+          <Modal isOpen={!!deleteId} onClose={() => setDeleteId(null)} title="Confirm Delete">
+            <p className="mb-5 text-sm text-gray-600">Are you sure you want to delete this record? This action cannot be undone.</p>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setDeleteId(null)}>Cancel</Button>
+              <Button variant="danger" onClick={handleDelete}>Delete</Button>
+            </div>
+          </Modal>
+
+          <Modal isOpen={!!verifyId} onClose={() => setVerifyId(null)} title="Verify Record">
+            <div className="space-y-4">
+              <Input
+                label="Verification Notes"
+                value={verifyNotes}
+                onChange={(e) => setVerifyNotes(e.target.value)}
+                placeholder="Optional notes"
+              />
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setVerifyId(null)}>Cancel</Button>
+                <Button variant="danger" onClick={handleReject}>Reject</Button>
+                <Button onClick={handleVerify}>Verify</Button>
+              </div>
+            </div>
+          </Modal>
         </div>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={data}
-        keyExtractor={(row) => row.id}
-        page={page}
-        perPage={perPage}
-        total={total}
-        onPageChange={setPage}
-        onPerPageChange={(size) => { setPerPage(size); setPage(1); }}
-      />
-
-      <Modal isOpen={!!deleteId} onClose={() => setDeleteId(null)} title="Confirm Delete">
-        <p className="mb-5 text-sm text-gray-600">Are you sure you want to delete this record? This action cannot be undone.</p>
-        <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={() => setDeleteId(null)}>Cancel</Button>
-          <Button variant="danger" onClick={handleDelete}>Delete</Button>
+      {printRecords && (
+        <div className="fixed inset-0 z-50 hidden bg-white print:block">
+          <PrintView records={printRecords} title={title} singleRecord={printSingle} />
         </div>
-      </Modal>
-
-      <Modal isOpen={!!verifyId} onClose={() => setVerifyId(null)} title="Verify Record">
-        <div className="space-y-4">
-          <Input
-            label="Verification Notes"
-            value={verifyNotes}
-            onChange={(e) => setVerifyNotes(e.target.value)}
-            placeholder="Optional notes"
-          />
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setVerifyId(null)}>Cancel</Button>
-            <Button variant="danger" onClick={handleReject}>Reject</Button>
-            <Button onClick={handleVerify}>Verify</Button>
-          </div>
-        </div>
-      </Modal>
-    </div>
+      )}
+    </>
   );
 }

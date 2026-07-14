@@ -310,7 +310,18 @@ const sessions: Map<string, User> = new Map();
 function recalc(p: Pensioner): Pensioner {
   const tenPercentGratuity = Math.round(p.gratuity * 0.1 * 100) / 100;
   const tenPercentPension = Math.round(p.pension * 0.1 * 100) / 100;
-  const dueForPayment = Math.round((p.amount_owed - p.amount_paid_by_oagf) * 100) / 100;
+  const dueForPayment =
+    Math.round(
+      (p.gratuity +
+        tenPercentGratuity +
+        p.pension +
+        tenPercentPension +
+        p.repatriation +
+        p.total_employee_contribution_due -
+        p.amount_owed -
+        p.amount_paid_by_oagf) *
+        100,
+    ) / 100;
   return {
     ...p,
     ten_percent_gratuity: tenPercentGratuity,
@@ -679,13 +690,19 @@ export async function exportCsv(
 ): Promise<{ filename: string; record_count: number }> {
   await delay(600);
   const user = requireAuth(token);
-  if (user.role !== "admin") throw new Error("Permission denied");
+  if (user.role !== "admin" && user.role !== "verifier" && user.role !== "clerk") {
+    throw new Error("Permission denied");
+  }
+  if (filter.scope === "audit" && user.role !== "admin") {
+    throw new Error("Permission denied");
+  }
   const scope = filter.scope;
   const filename = generateTimestampFilename(scope, "csv");
   let data: Pensioner[] = [];
   if (scope === "all") data = pensioners;
   else if (scope === "verified") data = pensioners.filter((p) => p.status === "Verified");
   else if (scope === "unverified") data = pensioners.filter((p) => p.status === "Unverified");
+  else if (scope === "rejected") data = pensioners.filter((p) => p.status === "Rejected");
   else if (scope === "audit") {
     logAudit(user, AUDIT_ACTIONS.EXPORT_CSV, "audit_logs", undefined, undefined, { filter, record_count: auditLogs.length });
     return { filename: generateTimestampFilename("audit", "csv"), record_count: auditLogs.length };
@@ -701,13 +718,16 @@ export async function exportExcel(
 ): Promise<{ filename: string; record_count: number }> {
   await delay(600);
   const user = requireAuth(token);
-  if (user.role !== "admin") throw new Error("Permission denied");
+  if (user.role !== "admin" && user.role !== "verifier" && user.role !== "clerk") {
+    throw new Error("Permission denied");
+  }
   const scope = filter.scope;
   const filename = generateTimestampFilename(scope, "xlsx");
   let data: Pensioner[] = [];
   if (scope === "all") data = pensioners;
   else if (scope === "verified") data = pensioners.filter((p) => p.status === "Verified");
   else if (scope === "unverified") data = pensioners.filter((p) => p.status === "Unverified");
+  else if (scope === "rejected") data = pensioners.filter((p) => p.status === "Rejected");
   logAudit(user, AUDIT_ACTIONS.EXPORT_EXCEL, "pensioners", undefined, undefined, { filter, record_count: data.length });
   return { filename, record_count: data.length };
 }

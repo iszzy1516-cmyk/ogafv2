@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "OAGF Pension Severance Admin Demo",
+  "productName": "OAGF SEVERANCE Admin Demo",
   "identifier": "gov.ng.oagf.pension.admin.demo",
   "build": {
     "beforeBuildCommand": "npm run build:demo"

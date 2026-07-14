@@ -49,7 +49,10 @@ pub async fn export_csv(
     path: String,
 ) -> Result<ExportResult, Error> {
     let user = extract_user(&backend, &token).await?;
-    require_role(&user, &[Role::Admin])?;
+    require_role(&user, &[Role::Admin, Role::Verifier, Role::Clerk])?;
+    if filter.scope == "audit" {
+        return Err(Error::Validation("CSV export for audit logs requires an admin".into()));
+    }
     let db = backend.db().await?;
 
     let filename = generate_filename(&filter.scope, "csv");
@@ -86,7 +89,10 @@ pub async fn export_excel(
     path: String,
 ) -> Result<ExportResult, Error> {
     let user = extract_user(&backend, &token).await?;
-    require_role(&user, &[Role::Admin])?;
+    require_role(&user, &[Role::Admin, Role::Verifier, Role::Clerk])?;
+    if filter.scope == "audit" {
+        return Err(Error::Validation("CSV export for audit logs requires an admin".into()));
+    }
     let db = backend.db().await?;
 
     if filter.scope == "audit" {

@@ -10,4 +10,5 @@ export { DataTable } from "./ui/DataTable.js";
 export type { Column } from "./ui/DataTable.js";
 export { ToastContainer } from "./ui/Toast.js";
 export { LoadingScreen } from "./ui/LoadingScreen.js";
+export { PrintView } from "./ui/PrintView.js";
 export { ChangePasswordPage } from "./pages/ChangePasswordPage.js";

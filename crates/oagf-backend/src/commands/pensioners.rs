@@ -81,7 +81,6 @@ fn validate_pensioner(req: &CreatePensionerRequest) -> Result<(), Error> {
     validate_length(&req.zone, "Zone")?;
     validate_length(&req.mda_name, "MDA name")?;
     validate_length(&req.bank_name, "Bank name")?;
-    validate_length(&req.sort_code, "Sort code")?;
     validate_length(&req.nok_name, "Next of kin name")?;
     validate_length(&req.nok_relation, "Next of kin relation")?;
     Ok(())
@@ -98,9 +97,19 @@ fn ten_percent(value: Money) -> Money {
 }
 
 fn calc_due_for_payment(req: &CreatePensionerRequest) -> Money {
+    let gratuity = req.gratuity.unwrap_or(Money::zero());
+    let pension = req.pension.unwrap_or(Money::zero());
+    let repatriation = req.repatriation.unwrap_or(Money::zero());
+    let employee_contribution = req.total_employee_contribution_due.unwrap_or(Money::zero());
     let amount_owed = calc_amount_owed(req);
     let paid = req.amount_paid_by_oagf.unwrap_or(Money::zero());
-    amount_owed - paid
+
+    let ten_percent_gratuity = ten_percent(gratuity);
+    let ten_percent_pension = ten_percent(pension);
+
+    gratuity + ten_percent_gratuity + pension + ten_percent_pension + repatriation + employee_contribution
+        - amount_owed
+        - paid
 }
 
 #[tauri::command(rename_all = "snake_case")]

@@ -1,4 +1,4 @@
-# OAGF Pension Severance Application
+# OAGF SEVERANCE Application
 
 > **Office of the Accountant General of the Federation (OAGF), Nigeria**
 >
@@ -36,7 +36,7 @@
 
 ## Project Overview
 
-The **OAGF Pension Severance Application** is a desktop system designed for the Office of the Accountant General of the Federation to capture, verify, and manage pensioner severance records locally without any external server or cloud dependency.
+The **OAGF SEVERANCE Application** is a desktop system designed for the Office of the Accountant General of the Federation to capture, verify, and manage pensioner severance records locally without any external server or cloud dependency.
 
 The application runs entirely on a local Windows machine (targeted for Windows 10/11). It uses a local **PostgreSQL** database for structured storage and the local filesystem for beneficiary photos and exports.
 
@@ -520,7 +520,7 @@ npm run tauri:build:demo:main
 npm run tauri:build:demo:admin
 ```
 
-Demo installers are named with "Demo" suffix (e.g. `OAGF Pension Severance Demo_0.1.0_x64_en-US.msi`) and install with a separate application identifier so they coexist with the production app.
+Demo installers are named with "Demo" suffix (e.g. `OAGF SEVERANCE Demo_0.1.0_x64_en-US.msi`) and install with a separate application identifier so they coexist with the production app.
 
 **Demo logins:**
 
@@ -578,7 +578,7 @@ git tag -a v0.1.0 -m "Release v0.1.0"
 git push origin v0.1.0
 ```
 
-The workflow will build all installers and create a release named **OAGF Pension Severance v0.1.0** with the MSI/EXE files attached.
+The workflow will build all installers and create a release named **OAGF SEVERANCE v0.1.0** with the MSI/EXE files attached.
 
 **Option B — Manual release with a custom tag:**
 

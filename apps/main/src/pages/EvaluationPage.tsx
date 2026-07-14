@@ -47,8 +47,8 @@ type FormState = {
   amount_owed: string;
   amount_paid_by_oagf: string;
   bank_name: string;
+  custom_bank_name: string;
   account_number: string;
-  sort_code: string;
   bank_address: string;
   nok_name: string;
   nok_phone: string;
@@ -80,8 +80,8 @@ const emptyForm: FormState = {
   amount_owed: "",
   amount_paid_by_oagf: "",
   bank_name: "",
+  custom_bank_name: "",
   account_number: "",
-  sort_code: "",
   bank_address: "",
   nok_name: "",
   nok_phone: "",
@@ -148,8 +148,8 @@ export function EvaluationPage() {
       amount_owed: p.amount_owed?.toString() ?? "",
       amount_paid_by_oagf: p.amount_paid_by_oagf?.toString() ?? "",
       bank_name: p.bank_name ?? "",
+      custom_bank_name: "",
       account_number: p.account_number ?? "",
-      sort_code: p.sort_code ?? "",
       bank_address: p.bank_address ?? "",
       nok_name: p.nok_name ?? "",
       nok_phone: p.nok_phone ?? "",
@@ -208,9 +208,11 @@ export function EvaluationPage() {
         ten_percent_gratuity: financial.tenPercentGratuity,
         ten_percent_pension: financial.tenPercentPension,
         due_for_payment_by_oagf: financial.dueForPayment,
-        bank_name: form.bank_name || undefined,
+        bank_name:
+          form.bank_name === "Other" && form.custom_bank_name.trim()
+            ? form.custom_bank_name.trim()
+            : form.bank_name || undefined,
         account_number: form.account_number || undefined,
-        sort_code: form.sort_code || undefined,
         bank_address: form.bank_address || undefined,
         nok_name: form.nok_name || undefined,
         nok_phone: form.nok_phone || undefined,
@@ -504,6 +506,14 @@ export function EvaluationPage() {
                 options={BANKS.map((b) => ({ value: b, label: b }))}
                 placeholder="Select bank"
               />
+              {form.bank_name === "Other" && (
+                <Input
+                  label="Custom Bank Name"
+                  value={form.custom_bank_name}
+                  onChange={(e) => updateField("custom_bank_name", e.target.value)}
+                  placeholder="Enter bank name"
+                />
+              )}
               <Input
                 label="Account Number"
                 type="text"
@@ -512,12 +522,6 @@ export function EvaluationPage() {
                 onChange={(e) => updateField("account_number", e.target.value)}
                 error={errors.account_number}
                 hint="10-digit NUBAN account number"
-              />
-              <Input
-                label="Sort Code"
-                value={form.sort_code}
-                onChange={(e) => updateField("sort_code", e.target.value)}
-                placeholder="e.g. 011"
               />
               <div className="md:col-span-2 lg:col-span-3">
                 <Input

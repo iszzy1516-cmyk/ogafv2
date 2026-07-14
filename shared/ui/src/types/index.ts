@@ -57,6 +57,7 @@ export interface Pensioner {
   // 4. Banking Information
   bank_name?: string;
   account_number?: string;
+  /** @deprecated Sort code is no longer collected in the UI. Kept for backward compatibility. */
   sort_code?: string;
   bank_address?: string;
 
@@ -172,7 +173,7 @@ export interface DashboardStats {
 }
 
 export interface ExportFilter {
-  scope: "all" | "verified" | "unverified" | "audit" | "mda";
+  scope: "all" | "verified" | "unverified" | "rejected" | "audit" | "mda";
   date_from?: string;
   date_to?: string;
   mda?: string;

@@ -31,6 +31,7 @@ export { DataTable } from "./components/ui/DataTable.js";
 export type { Column } from "./components/ui/DataTable.js";
 export { ToastContainer } from "./components/ui/Toast.js";
 export { LoadingScreen } from "./components/ui/LoadingScreen.js";
+export { PrintView } from "./components/ui/PrintView.js";
 export { ChangePasswordPage } from "./components/pages/ChangePasswordPage.js";
 
 // Assets

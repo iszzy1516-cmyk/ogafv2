@@ -63,12 +63,22 @@ export function calculateFinancials(inputs: {
 } {
   const gratuity = parseFloat(inputs.gratuity) || 0;
   const pension = parseFloat(inputs.pension) || 0;
+  const repatriation = parseFloat(inputs.repatriation) || 0;
+  const employeeContribution = parseFloat(inputs.total_employee_contribution_due) || 0;
   const amountOwed = parseFloat(inputs.amount_owed) || 0;
   const paid = parseFloat(inputs.amount_paid_by_oagf) || 0;
 
   const tenPercentGratuity = gratuity * 0.1;
   const tenPercentPension = pension * 0.1;
-  const dueForPayment = amountOwed - paid;
+  const dueForPayment =
+    gratuity +
+    tenPercentGratuity +
+    pension +
+    tenPercentPension +
+    repatriation +
+    employeeContribution -
+    amountOwed -
+    paid;
 
   return {
     tenPercentGratuity,

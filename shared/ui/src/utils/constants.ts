@@ -50,4 +50,4 @@ export const AUDIT_ACTIONS = {
   RESTORE: "RESTORE",
 } as const;
 
-export const APP_NAME = "OAGF Pension Severance";
+export const APP_NAME = "OAGF SEVERANCE";

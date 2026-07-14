@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "OAGF Pension Severance Admin",
+  "productName": "OAGF SEVERANCE Admin",
   "version": "0.1.0",
   "identifier": "gov.ng.oagf.pension.admin",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "OAGF Pension Severance — Admin",
+        "title": "OAGF SEVERANCE — Admin",
         "width": 1400,
         "height": 900,
         "resizable": true,
