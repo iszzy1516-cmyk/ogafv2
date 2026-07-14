@@ -21,7 +21,7 @@ export function ToastContainer() {
   const removeToast = useUIStore((state) => state.removeToast);
 
   return (
-    <div className="fixed right-4 top-4 z-50 flex w-80 max-w-full flex-col gap-2">
+    <div className="fixed right-4 top-4 z-50 flex w-80 max-w-full flex-col gap-2 print:hidden">
       {toasts.map((toast) => {
         const Icon = icons[toast.type];
         return (

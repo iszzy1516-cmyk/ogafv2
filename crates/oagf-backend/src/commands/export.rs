@@ -12,6 +12,54 @@ use crate::fs;
 use crate::models::{ExportFilter, Role};
 use crate::Error;
 
+/// Writes a CSV text file to the app exports directory and returns the
+/// absolute path. Used by the demo/mock frontend so exports still land on
+/// disk even when the full PostgreSQL backend is disabled.
+#[tauri::command(rename_all = "snake_case")]
+pub async fn save_csv_export(filename: String, content: String) -> Result<String, Error> {
+    let exports_dir = crate::db::exports_dir(crate::data_dir());
+    let path = fs::save_file(&exports_dir, &filename, content.as_bytes())?;
+    Ok(path.to_string_lossy().to_string())
+}
+
+/// Writes a simple Excel workbook to the app exports directory and returns
+/// the absolute path. Used by the demo/mock frontend.
+#[tauri::command(rename_all = "snake_case")]
+pub async fn write_excel_export(
+    filename: String,
+    headers: Vec<String>,
+    rows: Vec<Vec<String>>,
+) -> Result<String, Error> {
+    use rust_xlsxwriter::Workbook;
+
+    let exports_dir = crate::db::exports_dir(crate::data_dir());
+    fs::ensure_dir(&exports_dir)?;
+    let path = exports_dir.join(fs::sanitize_filename(&filename));
+
+    let mut workbook = Workbook::new();
+    let worksheet = workbook.add_worksheet();
+
+    for (col, header) in headers.iter().enumerate() {
+        worksheet
+            .write_string(0, col as u16, header)
+            .map_err(|e| Error::Internal(format!("Excel write error: {e}")))?;
+    }
+
+    for (row_idx, row) in rows.iter().enumerate() {
+        for (col_idx, value) in row.iter().enumerate() {
+            worksheet
+                .write_string((row_idx + 1) as u32, col_idx as u16, value)
+                .map_err(|e| Error::Internal(format!("Excel write error: {e}")))?;
+        }
+    }
+
+    workbook
+        .save(&path)
+        .map_err(|e| Error::Internal(format!("Failed to write Excel file: {e}")))?;
+
+    Ok(path.to_string_lossy().to_string())
+}
+
 /// Resolves an export target path and ensures it cannot escape the intended
 /// directory via `..` or symlink tricks. Empty `path` defaults to the app
 /// exports directory. Returns the validated absolute path.
@@ -78,7 +126,7 @@ pub async fn export_csv(
     )
     .await?;
 
-    Ok(ExportResult { filename, record_count })
+    Ok(ExportResult { filename, record_count, path: target.to_string_lossy().to_string() })
 }
 
 #[tauri::command(rename_all = "snake_case")]
@@ -122,13 +170,14 @@ pub async fn export_excel(
     )
     .await?;
 
-    Ok(ExportResult { filename, record_count })
+    Ok(ExportResult { filename, record_count, path: target.to_string_lossy().to_string() })
 }
 
 #[derive(Debug, serde::Serialize)]
 pub struct ExportResult {
     pub filename: String,
     pub record_count: usize,
+    pub path: String,
 }
 
 fn generate_filename(scope: &str, ext: &str) -> String {

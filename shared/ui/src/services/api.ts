@@ -92,7 +92,7 @@ export async function changePassword(
 ): Promise<void> {
   ensureRuntime();
   if (USE_MOCK) {
-    return Promise.resolve();
+    return (await getMock()).changePassword(token, currentPassword, newPassword);
   }
   return tauriInvoke("change_password", {
     token,
@@ -204,20 +204,20 @@ export async function exportCsv(
   token: string,
   filter: ExportFilter,
   path: string,
-): Promise<{ filename: string; record_count: number }> {
+): Promise<{ filename: string; record_count: number; path: string }> {
   ensureRuntime();
   if (USE_MOCK) return (await getMock()).exportCsv(token, filter, path);
-  return tauriInvoke<{ filename: string; record_count: number }>("export_csv", { token, filter, path });
+  return tauriInvoke<{ filename: string; record_count: number; path: string }>("export_csv", { token, filter, path });
 }
 
 export async function exportExcel(
   token: string,
   filter: ExportFilter,
   path: string,
-): Promise<{ filename: string; record_count: number }> {
+): Promise<{ filename: string; record_count: number; path: string }> {
   ensureRuntime();
   if (USE_MOCK) return (await getMock()).exportExcel(token, filter, path);
-  return tauriInvoke<{ filename: string; record_count: number }>("export_excel", { token, filter, path });
+  return tauriInvoke<{ filename: string; record_count: number; path: string }>("export_excel", { token, filter, path });
 }
 
 export async function backupDatabase(token: string, path: string): Promise<{ filename: string }> {

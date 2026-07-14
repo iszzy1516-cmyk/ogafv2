@@ -437,7 +437,7 @@ pub async fn verify_pensioner(
     notes: Option<String>,
 ) -> Result<Pensioner, Error> {
     let user = extract_user(&backend, &token).await?;
-    require_role(&user, &[Role::Admin, Role::Verifier])?;
+    require_role(&user, &[Role::Admin, Role::Clerk, Role::Verifier])?;
     let db = backend.db().await?;
 
     let now = chrono::Utc::now();
@@ -484,7 +484,7 @@ pub async fn reject_pensioner(
     notes: Option<String>,
 ) -> Result<Pensioner, Error> {
     let user = extract_user(&backend, &token).await?;
-    require_role(&user, &[Role::Admin, Role::Verifier])?;
+    require_role(&user, &[Role::Admin, Role::Clerk, Role::Verifier])?;
     let db = backend.db().await?;
 
     let now = chrono::Utc::now();

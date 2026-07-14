@@ -1,4 +1,5 @@
 import { formatDate, formatNaira } from "../../utils/formatters";
+import { coatOfArms } from "../../index.js";
 import type { Pensioner } from "../../types";
 
 interface PrintViewProps {
@@ -38,6 +39,11 @@ export function PrintView({ records, title, singleRecord }: PrintViewProps) {
       `}</style>
 
       <header className="mb-4 border-b-2 border-black pb-3 text-center">
+        <img
+          src={coatOfArms}
+          alt="Coat of Arms of Nigeria"
+          className="mx-auto mb-2 h-16 w-auto"
+        />
         <h1 className="text-xl font-bold uppercase tracking-wide">OAGF SEVERANCE</h1>
         <p className="text-sm font-semibold">{title}</p>
         <p className="text-xs text-gray-600">Printed on {printDate}</p>

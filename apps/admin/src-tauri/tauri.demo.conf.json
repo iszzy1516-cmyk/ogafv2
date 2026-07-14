@@ -3,6 +3,8 @@
   "productName": "OAGF SEVERANCE Admin Demo",
   "identifier": "gov.ng.oagf.pension.admin.demo",
   "build": {
+    "beforeDevCommand": "npm run dev:demo",
+    "devUrl": "http://localhost:1422",
     "beforeBuildCommand": "npm run build:demo"
   }
 }

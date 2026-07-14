@@ -39,7 +39,7 @@ export function PensionerList({ status, title }: PensionerListProps) {
   const [printSingle, setPrintSingle] = useState(false);
 
   const isAdmin = user?.role === "admin";
-  const canVerify = user?.role === "verifier" || isAdmin;
+  const canVerify = isAdmin || user?.role === "clerk";
   const canExport = user?.role === "admin" || user?.role === "verifier" || user?.role === "clerk";
 
   async function load() {
@@ -109,7 +109,7 @@ export function PensionerList({ status, title }: PensionerListProps) {
       addToast({
         type: "success",
         title: "Export Ready",
-        message: `${result.filename} with ${result.record_count} records saved.`,
+        message: `${result.filename} (${result.record_count} records) saved to ${result.path}`,
       });
     } catch (err) {
       addToast({

@@ -9,9 +9,9 @@ pub fn photos_dir(base: PathBuf) -> PathBuf {
     base.join("photos")
 }
 
-/// Returns the path to the exports directory.
+/// Returns the path to the exports directory (user Downloads by default).
 pub fn exports_dir(base: PathBuf) -> PathBuf {
-    base.join("exports")
+    dirs::download_dir().unwrap_or_else(|| base.join("exports"))
 }
 
 /// Returns the path to the backups directory.

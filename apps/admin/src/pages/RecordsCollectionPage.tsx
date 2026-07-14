@@ -63,7 +63,7 @@ export function RecordsCollectionPage() {
     if (!token) return;
     try {
       const result = await api.exportCsv(token, { scope }, "");
-      addToast({ type: "success", title: "Export Ready", message: `${result.filename} with ${result.record_count} records.` });
+      addToast({ type: "success", title: "Export Ready", message: `${result.filename} (${result.record_count} records) saved to ${result.path}` });
     } catch (err) {
       addToast({ type: "error", title: "Error", message: err instanceof Error ? err.message : "Export failed" });
     }

@@ -177,6 +177,8 @@ pub fn setup<R: tauri::Runtime>(builder: tauri::Builder<R>) -> tauri::Builder<R>
             commands::dashboard::get_dashboard_stats,
             commands::export::export_csv,
             commands::export::export_excel,
+            commands::export::save_csv_export,
+            commands::export::write_excel_export,
             commands::backup::storage_info,
             commands::photos::save_photo,
             commands::photos::list_cameras,

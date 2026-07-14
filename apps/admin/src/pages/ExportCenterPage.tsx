@@ -19,7 +19,7 @@ export function ExportCenterPage() {
       addToast({
         type: "success",
         title: "Export Ready",
-        message: `${result.filename} with ${result.record_count} records saved.`,
+        message: `${result.filename} (${result.record_count} records) saved to ${result.path}`,
       });
     } catch (err) {
       addToast({ type: "error", title: "Error", message: err instanceof Error ? err.message : "Export failed" });

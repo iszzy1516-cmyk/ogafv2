@@ -16,6 +16,7 @@ import type {
 } from "../types";
 import { AUDIT_ACTIONS } from "../utils/constants";
 import { generateTimestampFilename } from "../utils/formatters";
+import { tauriInvoke } from "./tauri.js";
 
 // ---------------------------------------------------------------------------
 // In-memory seed data
@@ -23,7 +24,6 @@ import { generateTimestampFilename } from "../utils/formatters";
 
 const MOCK_PASSWORDS: Record<string, string> = {
   admin: "Admin@123",
-  verifier: "Verifier@123",
   clerk: "Clerk@123",
 };
 
@@ -37,22 +37,8 @@ let users: User[] = [
     phone: "08012345678",
     is_active: true,
     last_login: new Date().toISOString(),
-    password_changed_at: new Date().toISOString(),
-    must_change_password: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "u-002",
-    username: "verifier",
-    role: "verifier",
-    full_name: "Amina Bello",
-    email: "verifier@oagf.gov.ng",
-    phone: "08023456789",
-    is_active: true,
-    last_login: new Date().toISOString(),
-    password_changed_at: new Date().toISOString(),
-    must_change_password: false,
+    password_changed_at: undefined,
+    must_change_password: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -65,8 +51,8 @@ let users: User[] = [
     phone: "08034567890",
     is_active: true,
     last_login: new Date().toISOString(),
-    password_changed_at: new Date().toISOString(),
-    must_change_password: false,
+    password_changed_at: undefined,
+    must_change_password: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -430,6 +416,24 @@ export async function logout(token: string): Promise<void> {
   if (user) logAudit(user, AUDIT_ACTIONS.LOGOUT);
 }
 
+export async function changePassword(
+  token: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<void> {
+  const user = requireAuth(token);
+  if (MOCK_PASSWORDS[user.username] !== currentPassword) {
+    throw new Error("Current password is incorrect");
+  }
+  if (newPassword.length < 8) {
+    throw new Error("Password must be at least 8 characters");
+  }
+  MOCK_PASSWORDS[user.username] = newPassword;
+  user.must_change_password = false;
+  user.password_changed_at = new Date().toISOString();
+  logAudit(user, AUDIT_ACTIONS.UPDATE, "users", user.id, undefined, { password_changed: true });
+}
+
 export async function getCurrentUser(token: string): Promise<User> {
   await delay(200);
   return requireAuth(token);
@@ -532,7 +536,7 @@ export async function updatePensioner(
 export async function verifyPensioner(token: string, id: string, notes?: string): Promise<Pensioner> {
   await delay(300);
   const user = requireAuth(token);
-  if (user.role !== "admin" && user.role !== "verifier") {
+  if (user.role !== "admin" && user.role !== "clerk" && user.role !== "verifier") {
     throw new Error("Permission denied");
   }
   const p = await getPensioner(token, id);
@@ -549,7 +553,7 @@ export async function verifyPensioner(token: string, id: string, notes?: string)
 export async function rejectPensioner(token: string, id: string, notes?: string): Promise<Pensioner> {
   await delay(300);
   const user = requireAuth(token);
-  if (user.role !== "admin" && user.role !== "verifier") {
+  if (user.role !== "admin" && user.role !== "clerk" && user.role !== "verifier") {
     throw new Error("Permission denied");
   }
   const p = await getPensioner(token, id);
@@ -683,11 +687,53 @@ export async function getDashboardStats(token: string): Promise<DashboardStats> 
   };
 }
 
+function csvEscape(value: unknown): string {
+  const text = String(value ?? "");
+  if (/[",\n\r]/.test(text)) {
+    return `"${text.replace(/"/g, "\"\"")}"`;
+  }
+  return text;
+}
+
+const EXPORT_HEADERS = [
+  "Full Name",
+  "MDA",
+  "Zone",
+  "Status",
+  "Gratuity",
+  "Pension",
+  "10% Gratuity",
+  "10% Pension",
+  "Repatriation",
+  "Employee Contribution",
+  "Amount Owed",
+  "Amount Paid by OAGF",
+  "Due for Payment",
+];
+
+function pensionerRow(p: Pensioner): string[] {
+  return [
+    p.full_name,
+    p.mda_name ?? "",
+    p.zone ?? "",
+    p.status,
+    String(p.gratuity ?? 0),
+    String(p.pension ?? 0),
+    String(p.ten_percent_gratuity ?? 0),
+    String(p.ten_percent_pension ?? 0),
+    String(p.repatriation ?? 0),
+    String(p.total_employee_contribution_due ?? 0),
+    String(p.amount_owed ?? 0),
+    String(p.amount_paid_by_oagf ?? 0),
+    String(p.due_for_payment_by_oagf ?? 0),
+  ];
+}
+
 export async function exportCsv(
   token: string,
   filter: ExportFilter,
   _path: string,
-): Promise<{ filename: string; record_count: number }> {
+): Promise<{ filename: string; record_count: number; path: string }> {
   await delay(600);
   const user = requireAuth(token);
   if (user.role !== "admin" && user.role !== "verifier" && user.role !== "clerk") {
@@ -696,40 +742,68 @@ export async function exportCsv(
   if (filter.scope === "audit" && user.role !== "admin") {
     throw new Error("Permission denied");
   }
+
   const scope = filter.scope;
-  const filename = generateTimestampFilename(scope, "csv");
   let data: Pensioner[] = [];
-  if (scope === "all") data = pensioners;
+  if (scope === "all") data = [...pensioners];
   else if (scope === "verified") data = pensioners.filter((p) => p.status === "Verified");
   else if (scope === "unverified") data = pensioners.filter((p) => p.status === "Unverified");
   else if (scope === "rejected") data = pensioners.filter((p) => p.status === "Rejected");
-  else if (scope === "audit") {
+
+  if (scope === "audit") {
+    const auditFilename = generateTimestampFilename("audit", "csv");
+    const lines = [
+      ["Date", "User", "Action", "Table", "Record ID"].map(csvEscape).join(","),
+      ...auditLogs.map((a) => [a.performed_at, a.user_name, a.action, a.table_name ?? "", a.record_id ?? ""].map(csvEscape).join(",")),
+    ];
+    const path = await tauriInvoke<string>("save_csv_export", {
+      filename: auditFilename,
+      content: lines.join("\n"),
+    });
     logAudit(user, AUDIT_ACTIONS.EXPORT_CSV, "audit_logs", undefined, undefined, { filter, record_count: auditLogs.length });
-    return { filename: generateTimestampFilename("audit", "csv"), record_count: auditLogs.length };
+    return { filename: auditFilename, record_count: auditLogs.length, path };
   }
+
+  const filename = generateTimestampFilename(scope, "csv");
+  const lines = [
+    EXPORT_HEADERS.map(csvEscape).join(","),
+    ...data.map((p) => pensionerRow(p).map(csvEscape).join(",")),
+  ];
+  const path = await tauriInvoke<string>("save_csv_export", {
+    filename,
+    content: lines.join("\n"),
+  });
   logAudit(user, AUDIT_ACTIONS.EXPORT_CSV, "pensioners", undefined, undefined, { filter, record_count: data.length });
-  return { filename, record_count: data.length };
+  return { filename, record_count: data.length, path };
 }
 
 export async function exportExcel(
   token: string,
   filter: ExportFilter,
   _path: string,
-): Promise<{ filename: string; record_count: number }> {
+): Promise<{ filename: string; record_count: number; path: string }> {
   await delay(600);
   const user = requireAuth(token);
   if (user.role !== "admin" && user.role !== "verifier" && user.role !== "clerk") {
     throw new Error("Permission denied");
   }
+
   const scope = filter.scope;
-  const filename = generateTimestampFilename(scope, "xlsx");
   let data: Pensioner[] = [];
-  if (scope === "all") data = pensioners;
+  if (scope === "all") data = [...pensioners];
   else if (scope === "verified") data = pensioners.filter((p) => p.status === "Verified");
   else if (scope === "unverified") data = pensioners.filter((p) => p.status === "Unverified");
   else if (scope === "rejected") data = pensioners.filter((p) => p.status === "Rejected");
+
+  const filename = generateTimestampFilename(scope, "xlsx");
+  const rows = data.map((p) => pensionerRow(p));
+  const path = await tauriInvoke<string>("write_excel_export", {
+    filename,
+    headers: EXPORT_HEADERS,
+    rows,
+  });
   logAudit(user, AUDIT_ACTIONS.EXPORT_EXCEL, "pensioners", undefined, undefined, { filter, record_count: data.length });
-  return { filename, record_count: data.length };
+  return { filename, record_count: data.length, path };
 }
 
 export async function backupDatabase(token: string, _path: string): Promise<{ filename: string }> {
