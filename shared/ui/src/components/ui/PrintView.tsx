@@ -109,6 +109,34 @@ function SingleRecordView({ record }: { record: Pensioner }) {
         </div>
       </section>
 
+      <section className="print-row grid grid-cols-2 gap-4 text-sm">
+        <p className="col-span-2 mb-1 text-xs font-semibold uppercase">Employment &amp; Service Records</p>
+        <div>
+          <p className="text-xs text-gray-500">Salary Structure</p>
+          <p>{record.salary_structure || "—"}</p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-500">Grade / Step</p>
+          <p>{record.grade || "—"} / {record.step || "—"}</p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-500">First Appointment Date</p>
+          <p>{formatDate(record.first_appointment_date)}</p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-500">Last Promotion Date</p>
+          <p>{formatDate(record.last_promotion_date)}</p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-500">Retirement Date</p>
+          <p>{formatDate(record.retirement_date)}</p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-500">Years / Months of Service</p>
+          <p>{record.years_of_service ?? "—"} / {record.months_of_service ?? "—"}</p>
+        </div>
+      </section>
+
       <section className="print-row">
         <p className="mb-2 text-xs font-semibold uppercase">Financial Summary</p>
         <div className="grid grid-cols-2 gap-2 text-sm">
