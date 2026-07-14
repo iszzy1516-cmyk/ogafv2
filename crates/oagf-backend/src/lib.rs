@@ -32,8 +32,10 @@ impl Default for BackendState {
             init_error: Mutex::new(None),
             // First launch may need to extract the bundled PostgreSQL archive,
             // run initdb, and start the server, which can take longer than a
-            // plain connection attempt (especially with AV scanning new binaries).
-            ready_timeout: Duration::from_secs(90),
+            // plain connection attempt (especially with AV scanning new
+            // binaries). Kept above embedded::ensure_local_postgres's own
+            // 120s internal deadline so that timeout surfaces first.
+            ready_timeout: Duration::from_secs(150),
         }
     }
 }

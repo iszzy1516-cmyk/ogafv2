@@ -46,6 +46,10 @@ pub async fn ensure_local_postgres(base_dir: &Path) -> Result<(), crate::Error> 
         username: USERNAME.to_string(),
         password: PASSWORD.to_string(),
         temporary: false,
+        // The crate's own default internal deadline is too short for a cold
+        // first run, where antivirus software scanning the newly-extracted
+        // postgres.exe/initdb.exe can slow startup well past it.
+        timeout: Some(Duration::from_secs(120)),
         ..Default::default()
     };
 

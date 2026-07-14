@@ -51,9 +51,14 @@ export async function waitForBackend(): Promise<boolean> {
   if (USE_MOCK) return true;
 
   return new Promise<boolean>((resolve, reject) => {
+    // Must stay above the Rust backend's own ready_timeout (150s) — first
+    // launch can take a while to extract the bundled PostgreSQL archive,
+    // run initdb, and start the server, especially with AV scanning new
+    // binaries. A shorter timeout here would show a false "failed to start"
+    // error while the backend is still legitimately initializing.
     const timeout = setTimeout(() => {
       reject(new Error("Timed out waiting for the backend to respond. Check the Rust/Tauri process and terminal logs."));
-    }, 15000);
+    }, 160000);
 
     tauriInvoke<boolean>("wait_for_backend")
       .then((value) => {

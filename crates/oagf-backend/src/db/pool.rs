@@ -46,7 +46,11 @@ impl DbState {
 
         let pool = PgPoolOptions::new()
             .max_connections(10)
-            .acquire_timeout(std::time::Duration::from_secs(10))
+            // A freshly-started embedded Postgres can take a few extra seconds
+            // beyond `start()` returning before it accepts connections (e.g.
+            // under AV-scanning load on first run), so this needs more room
+            // than a typical already-running Postgres would need.
+            .acquire_timeout(std::time::Duration::from_secs(30))
             .connect_with(options)
             .await
             .map_err(|e| {
