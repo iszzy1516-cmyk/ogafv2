@@ -1,0 +1,5 @@
+# Pin migration file line endings so sqlx's checksum verification never
+# drifts between machines/CI runners with different autocrlf settings again
+# (a mismatch here makes the app refuse to start with "migration N was
+# previously applied but has been modified").
+crates/oagf-backend/migrations/*.sql text eol=crlf
