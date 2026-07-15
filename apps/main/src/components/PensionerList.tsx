@@ -122,6 +122,21 @@ export function PensionerList({ status, title }: PensionerListProps) {
     }
   }
 
+  function printWithoutBrowserHeader() {
+    // Chromium's print pipeline injects its own date/title header above the
+    // page content, sourced from document.title. Blank it out for the print
+    // job only, since the page's own PrintView already renders a proper title.
+    const previousTitle = document.title;
+    document.title = "";
+    const restore = () => {
+      document.title = previousTitle;
+      window.removeEventListener("afterprint", restore);
+    };
+    window.addEventListener("afterprint", restore);
+    window.print();
+    restore();
+  }
+
   function handlePrintPage() {
     if (data.length === 0) {
       addToast({ type: "warning", title: "Nothing to print", message: "There are no records on this page." });
@@ -129,13 +144,13 @@ export function PensionerList({ status, title }: PensionerListProps) {
     }
     setPrintRecords(data);
     setPrintSingle(false);
-    setTimeout(() => window.print(), 500);
+    setTimeout(printWithoutBrowserHeader, 500);
   }
 
   function handlePrintRecord(record: Pensioner) {
     setPrintRecords([record]);
     setPrintSingle(true);
-    setTimeout(() => window.print(), 500);
+    setTimeout(printWithoutBrowserHeader, 500);
   }
 
   const moneyCell = (value: number) => <span className="tabular-figures">{formatNaira(value)}</span>;

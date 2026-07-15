@@ -15,6 +15,7 @@ pub struct CreatePensionerRequest {
     pub date_of_birth: Option<chrono::NaiveDate>,
     pub location: Option<String>,
     pub zone: Option<String>,
+    pub phone: Option<String>,
     pub photo_path: Option<String>,
     pub salary_structure: Option<String>,
     pub mda_name: Option<String>,
@@ -79,6 +80,7 @@ fn validate_pensioner(req: &CreatePensionerRequest) -> Result<(), Error> {
     }
     validate_length(&req.location, "Location")?;
     validate_length(&req.zone, "Zone")?;
+    validate_length(&req.phone, "Phone")?;
     validate_length(&req.mda_name, "MDA name")?;
     validate_length(&req.bank_name, "Bank name")?;
     validate_length(&req.nok_name, "Next of kin name")?;
@@ -133,7 +135,7 @@ pub async fn create_pensioner(
 
     sqlx::query(
         "INSERT INTO pensioners (
-            id, full_name, gender, date_of_birth, location, zone, photo_path,
+            id, full_name, gender, date_of_birth, location, zone, phone, photo_path,
             salary_structure, mda_name, grade, step, first_appointment_date, last_promotion_date, retirement_date,
             years_of_service, months_of_service,
             apa, gratuity, pension, repatriation, total_employee_contribution_due,
@@ -143,15 +145,15 @@ pub async fn create_pensioner(
             nok_name, nok_phone, nok_relation, nok_payment,
             status, created_by, updated_by, created_at, updated_at
         ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7,
-            $8, $9, $10, $11, $12, $13, $14,
-            $15, $16,
-            $17, $18, $19, $20, $21,
-            $22, $23, $24,
-            $25, $26, $27,
-            $28, $29, $30, $31,
-            $32, $33, $34, $35,
-            'Unverified', $36, $36, $37, $37
+            $1, $2, $3, $4, $5, $6, $7, $8,
+            $9, $10, $11, $12, $13, $14, $15,
+            $16, $17,
+            $18, $19, $20, $21, $22,
+            $23, $24, $25,
+            $26, $27, $28,
+            $29, $30, $31, $32,
+            $33, $34, $35, $36,
+            'Unverified', $37, $37, $38, $38
         )"
     )
     .bind(id)
@@ -160,6 +162,7 @@ pub async fn create_pensioner(
     .bind(data.date_of_birth)
     .bind(&data.location)
     .bind(&data.zone)
+    .bind(&data.phone)
     .bind(&data.photo_path)
     .bind(&data.salary_structure)
     .bind(&data.mda_name)
@@ -357,23 +360,24 @@ pub async fn update_pensioner(
 
     sqlx::query(
         "UPDATE pensioners SET
-            full_name = $1, gender = $2, date_of_birth = $3, location = $4, zone = $5, photo_path = $6,
-            salary_structure = $7, mda_name = $8, grade = $9, step = $10,
-            first_appointment_date = $11, last_promotion_date = $12, retirement_date = $13,
-            years_of_service = $14, months_of_service = $15,
-            apa = $16, gratuity = $17, pension = $18, repatriation = $19,
-            total_employee_contribution_due = $20, amount_owed = $21, amount_owed_to_mda = $22, amount_paid_by_oagf = $23,
-            ten_percent_gratuity = $24, ten_percent_pension = $25, due_for_payment_by_oagf = $26,
-            bank_name = $27, account_number = $28, sort_code = $29, bank_address = $30,
-            nok_name = $31, nok_phone = $32, nok_relation = $33, nok_payment = $34,
-            updated_by = $35, updated_at = $36
-        WHERE id = $37"
+            full_name = $1, gender = $2, date_of_birth = $3, location = $4, zone = $5, phone = $6, photo_path = $7,
+            salary_structure = $8, mda_name = $9, grade = $10, step = $11,
+            first_appointment_date = $12, last_promotion_date = $13, retirement_date = $14,
+            years_of_service = $15, months_of_service = $16,
+            apa = $17, gratuity = $18, pension = $19, repatriation = $20,
+            total_employee_contribution_due = $21, amount_owed = $22, amount_owed_to_mda = $23, amount_paid_by_oagf = $24,
+            ten_percent_gratuity = $25, ten_percent_pension = $26, due_for_payment_by_oagf = $27,
+            bank_name = $28, account_number = $29, sort_code = $30, bank_address = $31,
+            nok_name = $32, nok_phone = $33, nok_relation = $34, nok_payment = $35,
+            updated_by = $36, updated_at = $37
+        WHERE id = $38"
     )
     .bind(&updated_name)
     .bind(&data.gender)
     .bind(data.date_of_birth)
     .bind(&data.location)
     .bind(&data.zone)
+    .bind(&data.phone)
     .bind(&data.photo_path)
     .bind(&data.salary_structure)
     .bind(&data.mda_name)

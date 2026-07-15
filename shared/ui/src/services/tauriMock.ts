@@ -325,6 +325,7 @@ function createMockPensioner(partial: Partial<Pensioner>): Pensioner {
     date_of_birth: partial.date_of_birth,
     location: partial.location,
     zone: partial.zone,
+    phone: partial.phone,
     photo_path: partial.photo_path,
     salary_structure: partial.salary_structure,
     mda_name: partial.mda_name,

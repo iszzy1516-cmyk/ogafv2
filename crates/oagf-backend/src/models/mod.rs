@@ -99,6 +99,7 @@ pub struct Pensioner {
     pub date_of_birth: Option<chrono::NaiveDate>,
     pub location: Option<String>,
     pub zone: Option<String>,
+    pub phone: Option<String>,
     pub photo_path: Option<String>,
 
     // Employment & Service Records

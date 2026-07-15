@@ -29,6 +29,7 @@ type FormState = {
   date_of_birth: string;
   location: string;
   zone: string;
+  phone: string;
   photo_path: string;
   salary_structure: string;
   mda_name: string;
@@ -62,6 +63,7 @@ const emptyForm: FormState = {
   date_of_birth: "",
   location: "",
   zone: "",
+  phone: "",
   photo_path: "",
   salary_structure: "",
   mda_name: "",
@@ -130,6 +132,7 @@ export function EvaluationPage() {
       date_of_birth: formatDateForInput(p.date_of_birth),
       location: p.location ?? "",
       zone: p.zone ?? "",
+      phone: p.phone ?? "",
       photo_path: p.photo_path ?? "",
       salary_structure: p.salary_structure ?? "",
       mda_name: p.mda_name ?? "",
@@ -187,6 +190,7 @@ export function EvaluationPage() {
         date_of_birth: form.date_of_birth || undefined,
         location: form.location || undefined,
         zone: form.zone || undefined,
+        phone: form.phone || undefined,
         photo_path: form.photo_path || undefined,
         salary_structure: form.salary_structure || undefined,
         mda_name: form.mda_name || undefined,
@@ -296,6 +300,13 @@ export function EvaluationPage() {
                     onChange={(e) => updateField("zone", e.target.value)}
                     options={ZONES.map((z) => ({ value: z, label: z }))}
                     placeholder="Select zone"
+                  />
+                  <Input
+                    label="Phone Number"
+                    type="tel"
+                    value={form.phone}
+                    onChange={(e) => updateField("phone", e.target.value)}
+                    placeholder="080XXXXXXXX"
                   />
                 </div>
               </div>

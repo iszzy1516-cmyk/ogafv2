@@ -47,7 +47,7 @@ export function PrintView({ records, title, singleRecord }: PrintViewProps) {
           alt="Coat of Arms of Nigeria"
           className="mx-auto mb-1 h-14 w-auto"
         />
-        <h1 className="text-lg font-bold uppercase tracking-wide">OAGF SEVERANCE</h1>
+        <h1 className="text-lg font-bold uppercase tracking-wide">OAGF RETIREE SEVERANCE PAY SLIP</h1>
         <p className="text-xs font-semibold">{title}</p>
         <p className="text-[10px] text-gray-600">Printed on {printDate}</p>
       </header>
@@ -80,7 +80,7 @@ function SignatureLine({ label }: { label: string }) {
       <div className="border-b border-black pb-1">
         <span className="text-xs text-gray-500">Signature</span>
       </div>
-      <div className="mt-1 grid grid-cols-2 gap-2 text-xs">
+      <div className="mt-1 grid grid-cols-[3fr_1fr] gap-2 text-xs">
         <div className="border-b border-gray-400 pb-1">
           <span className="text-gray-500">Full Name</span>
         </div>
@@ -104,6 +104,7 @@ function SingleRecordView({ record }: { record: Pensioner }) {
             <Field label="Date of Birth" value={formatDate(record.date_of_birth)} />
             <Field label="Location" value={record.location || "—"} />
             <Field label="Zone" value={record.zone || "—"} />
+            <Field label="Phone" value={record.phone || "—"} />
           </div>
           {record.photo_path ? (
             <img
@@ -204,7 +205,7 @@ function RecordsDetailView({ records }: { records: Pensioner[] }) {
         >
           {idx > 0 && (
             <header className="mb-2 border-b-2 border-black pb-2 text-center print:block hidden">
-              <h1 className="text-lg font-bold uppercase tracking-wide">OAGF SEVERANCE</h1>
+              <h1 className="text-lg font-bold uppercase tracking-wide">OAGF RETIREE SEVERANCE PAY SLIP</h1>
               <p className="text-xs font-semibold">Detailed Record Print</p>
             </header>
           )}

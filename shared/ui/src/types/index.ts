@@ -26,6 +26,7 @@ export interface Pensioner {
   date_of_birth?: string;
   location?: string;
   zone?: string;
+  phone?: string;
   photo_path?: string;
 
   // 2. Employment & Service Records
