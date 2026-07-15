@@ -114,13 +114,14 @@ pub async fn export_csv(pool: &PgPool, filter: &ExportFilter, path: &Path) -> Re
         .await
         .map_err(|e| Error::Database(format!("Export query failed: {e}")))?;
 
-    let file = File::create(path).map_err(|e| Error::Internal(format!("Failed to create CSV: {e}")))?;
+    let mut file = File::create(path).map_err(|e| Error::Internal(format!("Failed to create CSV: {e}")))?;
+    // UTF-8 BOM for Excel, written as raw bytes -- writing it via write_record
+    // would count it as a 1-field CSV row and the writer's strict field-count
+    // consistency check would then reject the real (42-field) header/data rows.
+    use std::io::Write as _;
+    file.write_all("\u{FEFF}".as_bytes())
+        .map_err(|e| Error::Internal(format!("Failed to write CSV BOM: {e}")))?;
     let mut writer = WriterBuilder::new().from_writer(file);
-
-    // UTF-8 BOM for Excel
-    writer
-        .write_record(std::iter::once("\u{FEFF}"))
-        .map_err(|e| Error::Internal(format!("CSV write failed: {e}")))?;
 
     writer
         .write_record(PENSIONER_HEADERS)
@@ -206,11 +207,11 @@ async fn export_audit_csv(pool: &PgPool, filter: &ExportFilter, path: &Path) -> 
         .await
         .map_err(|e| Error::Database(format!("Audit export query failed: {e}")))?;
 
-    let file = File::create(path).map_err(|e| Error::Internal(format!("Failed to create CSV: {e}")))?;
+    let mut file = File::create(path).map_err(|e| Error::Internal(format!("Failed to create CSV: {e}")))?;
+    use std::io::Write as _;
+    file.write_all("\u{FEFF}".as_bytes())
+        .map_err(|e| Error::Internal(format!("Failed to write CSV BOM: {e}")))?;
     let mut writer = WriterBuilder::new().from_writer(file);
-    writer
-        .write_record(std::iter::once("\u{FEFF}"))
-        .map_err(|e| Error::Internal(format!("CSV write failed: {e}")))?;
     writer
         .write_record(AUDIT_HEADERS)
         .map_err(|e| Error::Internal(format!("CSV write failed: {e}")))?;

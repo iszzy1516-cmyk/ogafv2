@@ -79,10 +79,15 @@ fn resolve_export_target(base_dir: &Path, path: &str, filename: &str) -> Result<
         provided
     };
 
-    let target = base.join(filename);
-    // Defensive: resolve any symlinks and confirm the file sits under the base.
+    // The base directory must exist before it can be canonicalized, and the
+    // export file itself doesn't exist yet (it hasn't been written), so it
+    // can't be canonicalized directly -- doing so would always fail and fall
+    // back to a non-canonical form, making the starts_with check below spuriously
+    // fail (canonicalized directories get a `\\?\`-prefixed form on Windows).
+    // Join the already-sanitized `filename` onto the canonicalized base instead.
+    crate::fs::ensure_dir(&base)?;
     let canonical_base = base.canonicalize().unwrap_or_else(|_| base.clone());
-    let canonical_target = target.canonicalize().unwrap_or_else(|_| target.clone());
+    let canonical_target = canonical_base.join(filename);
     if !canonical_target.starts_with(&canonical_base) {
         return Err(Error::Validation("Export target is outside the allowed directory".into()));
     }
