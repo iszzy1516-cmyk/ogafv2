@@ -138,7 +138,7 @@ pub async fn export_csv(pool: &PgPool, filter: &ExportFilter, path: &Path) -> Re
 }
 
 const PENSIONER_HEADERS: &[&str] = &[
-    "id", "full_name", "gender", "date_of_birth", "location", "zone", "photo_path",
+    "id", "full_name", "gender", "date_of_birth", "location", "zone", "phone", "photo_path",
     "salary_structure", "mda_name", "grade", "step", "first_appointment_date",
     "last_promotion_date", "retirement_date", "years_of_service", "months_of_service",
     "apa", "gratuity", "pension", "repatriation", "total_employee_contribution_due",
@@ -158,6 +158,7 @@ fn pensioner_to_csv_record(p: &Pensioner) -> Vec<String> {
         sanitize_cell(&optional_date(p.date_of_birth)),
         sanitize_cell(&p.location.clone().unwrap_or_default()),
         sanitize_cell(&p.zone.clone().unwrap_or_default()),
+        sanitize_cell(&p.phone.clone().unwrap_or_default()),
         sanitize_cell(&p.photo_path.clone().unwrap_or_default()),
         sanitize_cell(&p.salary_structure.clone().unwrap_or_default()),
         sanitize_cell(&p.mda_name.clone().unwrap_or_default()),
@@ -268,7 +269,7 @@ pub async fn export_excel(pool: &PgPool, filter: &ExportFilter, path: &Path) -> 
             .map_err(xlsx_err)?;
     }
 
-    let currency_cols: &[usize] = &[16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26];
+    let currency_cols: &[usize] = &[17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27];
 
     for (row_idx, p) in rows.iter().enumerate() {
         let row = (row_idx + 1) as u32;
