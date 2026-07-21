@@ -3,7 +3,7 @@ members = ["crates/oagf-backend", "apps/main/src-tauri", "apps/admin/src-tauri"]
 resolver = "2"
 
 [workspace.package]
-version = "0.1.5"
+version = "0.1.6"
 edition = "2021"
 authors = ["OAGF IT Division"]
 description = "OAGF Pension Severance Desktop Application"
